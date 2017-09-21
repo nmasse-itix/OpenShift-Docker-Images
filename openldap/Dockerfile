@@ -11,6 +11,6 @@ RUN yum update -y \
 VOLUME /var/lib/ldap
 WORKDIR /var/lib/ldap
 
-EXPOSE 389
+EXPOSE 1389
 ENTRYPOINT [ "/usr/sbin/slapd" ]
-CMD [ "-d", "256", "-h", "ldap:///" ]
+CMD [ "-d", "256", "-h", "ldap://0.0.0.0:1389/" ]
