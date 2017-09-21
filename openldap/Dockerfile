@@ -5,8 +5,8 @@ RUN yum update -y \
  && yum clean all \
  && rm -rf /var/cache/yum \
  && cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG \
- && chgrp -R root /var/lib/ldap \
- && chmod -R g+rw,o= /var/lib/ldap
+ && chgrp -R root /var/lib/ldap /etc/openldap \
+ && chmod -R g+rw,o= /var/lib/ldap /etc/openldap
 
 VOLUME /var/lib/ldap
 WORKDIR /var/lib/ldap
