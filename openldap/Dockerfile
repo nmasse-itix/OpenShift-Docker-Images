@@ -5,7 +5,7 @@ RUN yum update -y \
  && yum -y install openldap-servers openldap-clients \
  && yum clean all \
  && rm -rf /var/cache/yum \
- && mkdir -p /var/lib/ldap/logs /var/lib/data/data \
+ && mkdir -p /var/lib/ldap/logs /var/lib/ldap/data \
  && chmod -R ugo+rw,+X /var/lib/ldap /var/run/openldap \
  && chmod -R ugo+r,+X /etc/openldap
 
