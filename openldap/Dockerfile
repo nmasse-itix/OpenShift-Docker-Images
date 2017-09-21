@@ -5,11 +5,11 @@ RUN yum update -y \
  && yum -y install openldap-servers openldap-clients \
  && yum clean all \
  && rm -rf /var/cache/yum \
- && mkdir -p /var/lib/ldap/logs /var/lib/ldap/data \
+ && mkdir -p /var/lib/ldap/{logs,data,tmp} \
  && chmod -R ugo+rw,+X /var/lib/ldap /var/run/openldap \
  && chmod -R ugo+r,+X /etc/openldap
 
-VOLUME /var/lib/ldap/logs /var/lib/ldap/data
+VOLUME /var/lib/ldap/logs /var/lib/ldap/data /var/lib/ldap/tmp
 WORKDIR /var/lib/ldap
 
 EXPOSE 1389
