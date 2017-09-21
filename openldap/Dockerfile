@@ -1,4 +1,4 @@
-FROM centos7:latest
+FROM centos:7
 
 RUN yum update -y && yum -y install openldap-servers openldap-clients && yum clean all && chgrp -R root /var/lib/ldap && chmod -R g+rw,o= /var/lib/ldap
 
