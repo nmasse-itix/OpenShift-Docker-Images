@@ -1,14 +1,15 @@
 FROM centos:7
 
+ADD DB_CONFIG /var/lib/ldap/DB_CONFIG
 RUN yum update -y \
  && yum -y install openldap-servers openldap-clients \
  && yum clean all \
  && rm -rf /var/cache/yum \
- && cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG \
+ && mkdir -p /var/lib/ldap/logs /var/lib/data/data \
  && chmod -R ugo+rw,+X /var/lib/ldap /var/run/openldap \
  && chmod -R ugo+r,+X /etc/openldap
 
-VOLUME /var/lib/ldap
+VOLUME /var/lib/ldap/logs /var/lib/ldap/data
 WORKDIR /var/lib/ldap
 
 EXPOSE 1389

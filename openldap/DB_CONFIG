@@ -1,0 +1,11 @@
+# Data & Logs Location
+set_data_dir data
+set_lg_dir logs
+
+# Cache size
+set_cachesize 0 268435456 1
+
+# Transaction Log settings
+set_lg_regionmax 262144
+set_lg_bsize 2097152
+
