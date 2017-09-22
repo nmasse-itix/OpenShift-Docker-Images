@@ -13,4 +13,4 @@ WORKDIR /var/lib/ldap
 
 EXPOSE 1389
 ENTRYPOINT [ "/usr/sbin/slapd" ]
-CMD [ "-d", "256", "-h", "ldapi:/// ldap://0.0.0.0:1389/" ]
+CMD [ "-d", "256", "-h", "ldap://0.0.0.0:1389/" ]
