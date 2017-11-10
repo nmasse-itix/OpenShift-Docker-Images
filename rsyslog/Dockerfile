@@ -1,4 +1,4 @@
-FROM rhel7
+FROM registry.access.redhat.com/rhel7:latest
 
 ADD rsyslog.conf /etc/rsyslog.conf
 RUN yum update -y \
