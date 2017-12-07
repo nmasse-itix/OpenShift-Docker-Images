@@ -8,5 +8,6 @@ OpenShift.
 Currently, the following software are available: 
 - [OpenLDAP](openldap)
 - [rsyslog](rsyslog)
+- [Grafana](grafana)
 
 
