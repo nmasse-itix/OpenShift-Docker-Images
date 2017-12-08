@@ -37,12 +37,79 @@ objects:
       serviceaccounts.openshift.io/oauth-redirectreference.proxy: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"grafana"}}'
   secrets:
 
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: grafana-config
+    namespace: ${NAMESPACE}
+    labels:
+      template: grafana
+  data:
+    grafana.ini: |-
+      [paths]
+      datasources = /etc/grafana-datasources/
+
+      [server]
+      http_addr = 127.0.0.1
+
+      [auth]
+      disable_login_form = true
+      disable_signout_menu = true
+
+      [auth.basic]
+      enabled = false
+
+      [auth.proxy]
+      enabled = true
+      header_name = X-Forwarded-User
+
+      [users]
+      auto_assign_org = true
+      auto_assign_org_role = Admin
+
+      [analytics]
+      reporting_enabled = false
+
+      [log]
+      mode = console
+
+      [dashboards.json]
+      enabled = true
+      path = /var/lib/grafana-dashboards
+
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: grafana-dashboards
+    namespace: ${NAMESPACE}
+    labels:
+      template: grafana
+  data:
+
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: grafana-datasources
+    namespace: ${NAMESPACE}
+    labels:
+      template: grafana
+  data:
+    prometheus.yaml: |-
+      datasources:
+        - name: prometheus
+          type: prometheus
+          access: proxy
+          url: http://prometheus:9090
+          version: 1
+          editable: false
+
 - apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
       build: grafana
       template: grafana
+    namespace: ${NAMESPACE}
     name: grafana
 
 - apiVersion: v1
@@ -116,6 +183,15 @@ objects:
           resources: {}
           securityContext: {}
           terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /etc/grafana/
+            name: grafana-config
+          - mountPath: /etc/grafana-datasources
+            name: grafana-datasources
+          - mountPath: /var/lib/grafana/
+            name: grafana-storage
+          - mountPath: /var/lib/grafana-dashboards
+            name: grafana-dashboards
         - image: ${PROXY_IMAGE}
           imagePullPolicy: IfNotPresent
           name: proxy
@@ -156,6 +232,17 @@ objects:
         - name: tls
           secret:
             secretName: grafana-tls
+        - name: grafana-storage
+          emptyDir: {}
+        - name: grafana-config
+          configMap:
+            name: grafana-config
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
     test: false
     triggers:
     - type: ConfigChange
@@ -180,7 +267,7 @@ objects:
       service.alpha.openshift.io/serving-cert-secret-name: grafana-tls
   spec:
     ports:
-    - name: proxy
+    - name: oauth-proxy
       port: 8443
       protocol: TCP
       targetPort: 8443
@@ -201,12 +288,14 @@ objects:
   spec:
     host: ${GRAFANA_ROUTE_HOSTNAME}
     port:
-      targetPort: 3000-tcp
+      targetPort: oauth-proxy
     to:
       kind: Service
       name: grafana
       weight: 100
     wildcardPolicy: None
+    tls:
+      termination: reencrypt
 
 ##
 ## Template Parameters
