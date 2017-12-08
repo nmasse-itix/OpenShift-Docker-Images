@@ -7,7 +7,7 @@ metadata:
   annotations:
     description: |-
       A grafana distribution for OpenShift.
-    openshift.io/display-name: Grafana
+    openshift.io/display-name: Grafana (Base)
     tags: instant-app
     template.openshift.io/documentation-url: https://github.com/nmasse-itix/OpenShift-Docker-Images/tree/master/grafana
     template.openshift.io/long-description: A grafana distribution for OpenShift.
@@ -304,6 +304,6 @@ parameters:
   generate: expression
   from: "[a-zA-Z0-9]{43}"
 
-- description: The namespace to instantiate Grafana under. Defaults to 'openshift-metrics'.
+- description: The namespace to instantiate this template under. Defaults to 'openshift-metrics'.
   name: NAMESPACE
   value: openshift-metrics
