@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: grafana
+  template: grafana-base
 message: See https://github.com/nmasse-itix/OpenShift-Docker-Images/tree/master/grafana for more details.
 metadata:
   annotations:
@@ -13,7 +13,7 @@ metadata:
     template.openshift.io/long-description: A grafana distribution for OpenShift.
     template.openshift.io/provider-display-name: Nicolas Massé
     template.openshift.io/support-url: https://github.com/nmasse-itix/OpenShift-Docker-Images/issues
-  name: grafana
+  name: grafana-base
 objects:
 
 - apiVersion: v1
@@ -22,7 +22,7 @@ objects:
     name: oauth-proxy
     namespace: "${NAMESPACE}"
     labels:
-      template: grafana
+      template: grafana-base
   stringData:
     session_secret: "${SESSION_SECRET}="
 
@@ -32,7 +32,7 @@ objects:
     name: grafana
     namespace: ${NAMESPACE}
     labels:
-      template: grafana
+      template: grafana-base
     annotations:
       serviceaccounts.openshift.io/oauth-redirectreference.proxy: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"grafana"}}'
   secrets:
@@ -43,7 +43,7 @@ objects:
     name: grafana-config
     namespace: ${NAMESPACE}
     labels:
-      template: grafana
+      template: grafana-base
   data:
     grafana.ini: |-
       [paths]
@@ -77,38 +77,12 @@ objects:
       enabled = true
       path = /var/lib/grafana-dashboards
 
-- kind: ConfigMap
-  apiVersion: v1
-  metadata:
-    name: grafana-dashboards
-    namespace: ${NAMESPACE}
-    labels:
-      template: grafana
-  data:
-
-- kind: ConfigMap
-  apiVersion: v1
-  metadata:
-    name: grafana-datasources
-    namespace: ${NAMESPACE}
-    labels:
-      template: grafana
-  data:
-    prometheus.yaml: |-
-      datasources:
-        - name: prometheus
-          type: prometheus
-          access: proxy
-          url: http://prometheus:9090
-          version: 1
-          editable: false
-
 - apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
       build: grafana
-      template: grafana
+      template: grafana-base
     namespace: ${NAMESPACE}
     name: grafana
 
@@ -118,7 +92,7 @@ objects:
     name: grafana
     labels:
       build: grafana
-      template: grafana
+      template: grafana-base
     namespace: ${NAMESPACE}
   spec:
     successfulBuildsHistoryLimit: 1
@@ -153,7 +127,7 @@ objects:
   metadata:
     labels:
       app: grafana
-      template: grafana
+      template: grafana-base
     name: grafana
     namespace: ${NAMESPACE}
   spec:
@@ -171,7 +145,7 @@ objects:
         labels:
           app: grafana
           deploymentconfig: grafana
-          template: grafana
+          template: grafana-base
       spec:
         containers:
         - image: " "
@@ -260,7 +234,7 @@ objects:
   metadata:
     labels:
       app: grafana
-      template: grafana
+      template: grafana-base
     name: grafana
     namespace: ${NAMESPACE}
     annotations:
@@ -282,7 +256,7 @@ objects:
   metadata:
     labels:
       app: grafana
-      template: grafana
+      template: grafana-base
     name: grafana
     namespace: ${NAMESPACE}
   spec:
