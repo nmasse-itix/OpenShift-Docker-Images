@@ -7,7 +7,7 @@ metadata:
   annotations:
     description: |-
       The default configmaps for a vanilla Grafana.
-    openshift.io/display-name: Grafana
+    openshift.io/display-name: Grafana (Vanilla configuration)
     tags: instant-app
     template.openshift.io/documentation-url: https://github.com/nmasse-itix/OpenShift-Docker-Images/tree/master/grafana
     template.openshift.io/long-description: Vanilla Grafana
@@ -38,6 +38,6 @@ objects:
 ## Template Parameters
 ##
 parameters:
-- description: The namespace to instantiate Grafana under. Defaults to 'openshift-metrics'.
+- description: The namespace to instantiate this template under. Defaults to 'openshift-metrics'.
   name: NAMESPACE
   value: openshift-metrics
