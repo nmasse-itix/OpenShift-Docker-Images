@@ -1,0 +1,231 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: minio
+message: See https://github.com/nmasse-itix/OpenShift-Docker-Images/tree/master/minio for more details.
+metadata:
+  annotations:
+    description: |-
+      A minio packaging for OpenShift.
+    openshift.io/display-name: Minio
+    tags: instant-app
+    template.openshift.io/documentation-url: https://github.com/nmasse-itix/OpenShift-Docker-Images/tree/master/minio
+    template.openshift.io/long-description: A minio packaging for OpenShift.
+    template.openshift.io/provider-display-name: Nicolas Massé
+    template.openshift.io/support-url: https://github.com/nmasse-itix/OpenShift-Docker-Images/issues
+  name: minio
+objects:
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: minio-storage
+    labels:
+      template: minio
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${PVC_SIZE}
+
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: minio-config
+    labels:
+      template: minio
+  data:
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      build: minio
+      template: minio
+    name: minio
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: minio
+    labels:
+      build: minio
+      template: minio
+  spec:
+    successfulBuildsHistoryLimit: 1
+    failedBuildsHistoryLimit: 1
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: minio:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        uri: ${GIT_REPO}
+      type: Git
+      contextDir: minio
+    strategy:
+      dockerStrategy:
+        from:
+          kind: ImageStreamTag
+          name: ${RHEL_IMAGE_STREAM_TAG}
+          namespace: ${RHEL_IMAGE_STREAM_NAMESPACE}
+      type: Docker
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: minio
+      template: minio
+    name: minio
+  spec:
+    replicas: 1
+    selector:
+      app: minio
+      deploymentconfig: minio
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      type: Recreate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: minio
+          deploymentconfig: minio
+          template: minio
+      spec:
+        containers:
+        - image: " "
+          imagePullPolicy: IfNotPresent
+          name: minio-server
+          ports:
+          - name: minio-server
+            containerPort: 9000
+            protocol: TCP
+          env:
+          - name: MINIO_DOMAIN
+            value: ${MINIO_ROUTE_HOSTNAME}
+          - name: MINIO_ACCESS_KEY
+            value: ${MINIO_ACCESS_KEY}
+          - name: MINIO_SECRET_KEY
+            value: ${MINIO_SECRET_KEY}
+          resources: {}
+          securityContext: {}
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /etc/minio/
+            name: minio-config
+          - mountPath: /var/lib/minio/
+            name: minio-storage
+        dnsPolicy: ClusterFirst
+        terminationGracePeriodSeconds: 30
+        restartPolicy: Always
+        volumes:
+        - name: minio-storage
+          persistentVolumeClaim:
+            claimName: minio-storage
+        - name: minio-config
+          configMap:
+            name: minio-config
+    test: false
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - minio-server
+        from:
+          kind: ImageStreamTag
+          name: minio:latest
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: minio
+      template: minio
+    name: minio
+  spec:
+    ports:
+    - name: minio-server
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+    selector:
+      app: minio
+      deploymentconfig: minio
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: minio
+      template: minio
+    name: minio
+  spec:
+    host: ${MINIO_ROUTE_HOSTNAME}
+    port:
+      targetPort: minio-server
+    to:
+      kind: Service
+      name: minio
+      weight: 100
+    wildcardPolicy: None
+    tls:
+      termination: edge
+
+##
+## Template Parameters
+##
+parameters:
+- description: The GIT repository to use.
+  displayName: GIT Repo URL
+  name: GIT_REPO
+  value: https://github.com/nmasse-itix/OpenShift-Docker-Images.git
+  required: true
+
+- description: The OpenShift Namespace where the RHEL ImageStream resides.
+  displayName: RHEL ImageStream Namespace
+  name: RHEL_IMAGE_STREAM_NAMESPACE
+  value: openshift
+  required: true
+
+- description: Name of the ImageStreamTag to be used for the RHEL image.
+  displayName: RHEL ImageStreamTag
+  name: RHEL_IMAGE_STREAM_TAG
+  value: rhel7:latest
+  required: true
+
+- description: The desired hostname of the route to the Minio service.
+  displayName: Hostname of the Minio Service
+  name: MINIO_ROUTE_HOSTNAME
+  required: true
+
+- description: The desired access key (login) to protect the Minio service.
+  displayName: Access Key (login)
+  name: MINIO_ACCESS_KEY
+  value: admin
+  required: true
+
+- description: The desired secret key (password) to protect the Minio service.
+  displayName: Secret Key (password)
+  name: MINIO_SECRET_KEY
+  generate: expression
+  from: "[a-zA-Z0-9]{32}"
+  required: true
+
+- description: The volume size to use when requesting the Persistent Volumes.
+  name: PVC_SIZE
+  value: "10Gi"
