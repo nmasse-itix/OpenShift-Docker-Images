@@ -10,6 +10,12 @@ on OpenShift.
 
 ## Deployment
 
+### Pre-requisites
+
+```
+oc import-image -n openshift rhel7 --from registry.access.redhat.com/rhel7:latest --confirm
+```
+
 ### Deploy Grafana and Prometheus
 
 ```
