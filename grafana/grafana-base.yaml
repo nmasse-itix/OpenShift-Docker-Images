@@ -293,7 +293,7 @@ parameters:
 - description: The Docker image to use for the OAuth Proxy.
   displayName: OAuth Proxy image
   name: PROXY_IMAGE
-  value: openshift3/oauth-proxy:v3.7
+  value: openshift3/oauth-proxy:v3.9
 
 - description: The desired hostname of the route to the Grafana service.
   displayName: Hostname of the Grafana Service
