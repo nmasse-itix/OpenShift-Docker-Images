@@ -28,7 +28,6 @@ objects:
     resources:
       requests:
         storage: ${PVC_SIZE}
-    storageClassName: ${PVC_STORAGE_CLASS}
 
 - apiVersion: v1
   kind: PersistentVolumeClaim
@@ -42,7 +41,6 @@ objects:
     resources:
       requests:
         storage: ${PVC_SIZE}
-    storageClassName: ${PVC_STORAGE_CLASS}
 
 - apiVersion: v1
   kind: PersistentVolumeClaim
@@ -56,7 +54,6 @@ objects:
     resources:
       requests:
         storage: ${PVC_SIZE}
-    storageClassName: ${PVC_STORAGE_CLASS}
 
 ##
 ## Template Parameters
@@ -66,10 +63,6 @@ parameters:
 - description: The namespace to instantiate this template under. Defaults to 'openshift-metrics'.
   name: NAMESPACE
   value: openshift-metrics
-
-- description: The Storage Class to use to request the Persistent Volumes.
-  name: PVC_STORAGE_CLASS
-  value: ""
 
 - description: The Storage Class to use to request the Persistent Volumes.
   name: PVC_SIZE
