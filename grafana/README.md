@@ -33,3 +33,12 @@ oc process -f grafana-base.yaml -p GRAFANA_ROUTE_HOSTNAME=grafana.app.openshift.
 oc process -f grafana-nodatasource.yaml |oc create -f -
 oc process -f grafana-base.yaml |oc create -f -
 ```
+
+## Configuration
+
+Once deployed, connect to Grafana and add a datasource with the following configuration:
+- Name: `prometheus`
+- Type: `Prometheus`
+- URL: `http://prometheus:9090`
+- Access: `proxy`
+
