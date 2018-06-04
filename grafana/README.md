@@ -14,7 +14,7 @@ on OpenShift.
 
 First, make sure the is a `rhel7` imagestream in the `openshift` namespace.
 ```
-oc import-image -n openshift rhel7 --from registry.access.redhat.com/rhel7:latest --confirm
+oc import-image -n openshift rhel7 --from registry.access.redhat.com/rhel7:7.4 --confirm
 ```
 
 Then, make sure you are cluster-admin on your OpenShift cluster.

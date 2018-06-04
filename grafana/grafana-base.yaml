@@ -288,7 +288,7 @@ parameters:
 - description: Name of the ImageStreamTag to be used for the RHEL image.
   displayName: RHEL ImageStreamTag
   name: RHEL_IMAGE_STREAM_TAG
-  value: rhel7:latest
+  value: rhel7:7.4
 
 - description: The Docker image to use for the OAuth Proxy.
   displayName: OAuth Proxy image
