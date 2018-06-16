@@ -35,6 +35,9 @@ EXPOSE 6881/udp
 ADD rtorrent.rc /etc/rtorrent.rc
 ADD custom.rc /etc/rtorrent/custom.rc
 
+# We need to make rtorrent believe it has a valid term
+ENV TERM=xterm
+
 # The unbuffer command is used as entrypoint to fake a tty.
 # It is required since the daemon mode will only be available 
 # with rtorrent 0.9.7.

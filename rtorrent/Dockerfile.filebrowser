@@ -1,0 +1,25 @@
+FROM centos:7
+
+# The GitHub tag to fetch
+ARG FILEBROWSER_RELEASE
+
+# Download filebrowser from 
+RUN mkdir /opt/filebrowser/{bin,etc,var} \
+ && curl -o /tmp/filebrowser.tar.gz https://github.com/filebrowser/filebrowser/releases/download/${FILEBROWSER_RELEASE}/linux-amd64-filebrowser.tar.gz \
+ && tar xvf /tmp/filebrowser.tar.gz -C /opt/filebrowser/bin filebrowser \
+ && chmod 755 /opt/filebrowser/bin/filebrowser \
+ && rm -f /tmp/filebrowser.tar.gz
+
+# File Browser configuration file
+ADD filebrowser-config.yaml /opt/filebrowser/etc/config.yaml
+
+VOLUME /opt/filebrowser/var
+VOLUME /torrent/incoming
+VOLUME /torrent/download
+
+# HTTP Port
+EXPOSE 8080
+
+ENTRYPOINT [ "/opt/filebrowser/bin/filebrowser" ]
+CMD [ "--config", "/opt/filebrowser/etc/config.yaml" ]
+
