@@ -1,6 +1,5 @@
 ---
 port: 8080
-baseURL: /
 noAuth: true # We will use the OpenShift OAuth Proxy
 database: "/opt/filebrowser/var/database.db"
 log: stdout
