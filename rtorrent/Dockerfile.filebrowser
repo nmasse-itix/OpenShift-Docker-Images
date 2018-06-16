@@ -4,7 +4,7 @@ FROM centos:7
 ARG FILEBROWSER_RELEASE
 
 # Download filebrowser from 
-RUN mkdir /opt/filebrowser/{bin,etc,var} \
+RUN mkdir -p /opt/filebrowser/{bin,etc,var} \
  && curl -o /tmp/filebrowser.tar.gz https://github.com/filebrowser/filebrowser/releases/download/${FILEBROWSER_RELEASE}/linux-amd64-filebrowser.tar.gz \
  && tar xvf /tmp/filebrowser.tar.gz -C /opt/filebrowser/bin filebrowser \
  && chmod 755 /opt/filebrowser/bin/filebrowser \
