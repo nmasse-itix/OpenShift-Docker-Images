@@ -1,0 +1,17 @@
+# Default directory to save the downloaded torrents.
+directory = /torrent/download
+
+# Default session directory. 
+session = /torrent/session
+
+# Watch a directory for new torrents, and stop those that have been
+# deleted.
+schedule = watch_directory,5,5,load_start=/torrent/incoming/*.torrent
+schedule = untied_directory,5,5,stop_untied=
+
+# Port range to use for listening.
+port_range = 6890-6890
+
+# UDP port to use for DHT. 
+# 
+dht_port = 6881
