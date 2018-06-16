@@ -5,7 +5,8 @@ RUN mkdir -p /opt/filebrowser/{bin,etc,var} \
  && curl -L -o /tmp/filebrowser.tar.gz https://github.com/filebrowser/filebrowser/releases/download/${FILEBROWSER_RELEASE}/linux-amd64-filebrowser.tar.gz \
  && tar xvf /tmp/filebrowser.tar.gz -C /opt/filebrowser/bin filebrowser \
  && chmod 755 /opt/filebrowser/bin/filebrowser \
- && rm -f /tmp/filebrowser.tar.gz
+ && rm -f /tmp/filebrowser.tar.gz \
+ && chmod -R ugo+rw,+X /opt/filebrowser/var
 
 # File Browser configuration file
 ADD filebrowser-config.yaml /opt/filebrowser/etc/config.yaml
