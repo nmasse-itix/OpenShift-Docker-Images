@@ -1,9 +1,16 @@
 FROM centos:7
 
-RUN yum update -y \
+# Enable the EPEL Repository
+RUN curl -o /tmp/epel-release-latest-7.noarch.rpm http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+ && rpm -Uvh /tmp/epel-release-latest-7.noarch.rpm \
+# Update the system
+ && yum update -y \
+# Install rtorrent and expect (provides "unbuffer")
  && yum -y install rtorrent expect \
+# Cleanup
  && yum clean all \
  && rm -rf /var/cache/yum \
+# Create a directory to hold the data and the configuration
  && mkdir /torrent /etc/rtorrent
 
 # Where leeched / seeded files are stored
