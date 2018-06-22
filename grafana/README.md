@@ -14,9 +14,9 @@ Make sure you are cluster-admin on your OpenShift cluster.
 
 ## Deploy Prometheus
 
-To deploy prometheus, process the `grafana.yaml` template with at least the
+To deploy prometheus, process the `prometheus.yaml` template with at least the
 `NAMESPACE` parameter. This parameter must be the name of the OpenShift
-project where you want to deploy prometheus. This parameter is required
+project where you want to deploy Prometheus. This parameter is required
 to setup correctly the OpenShift authentication in Prometheus.
 
 For instance, to deploy Prometheus in a project named "my-metrics", use:
