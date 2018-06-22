@@ -8,37 +8,66 @@ One of those sources is Prometheus.
 This project proposes ready-to-use templates to deploy Prometheus and Grafana
 on OpenShift.
 
-## Deployment
+## Pre-requisites
 
-### Pre-requisites
+Make sure you are cluster-admin on your OpenShift cluster.
 
-First, make sure the is a `rhel7` imagestream in the `openshift` namespace.
-```
-oc import-image -n openshift rhel7 --from registry.access.redhat.com/rhel7:7.4 --confirm
-```
+## Deploy Prometheus
 
-Then, make sure you are cluster-admin on your OpenShift cluster.
+To deploy prometheus, process the `grafana.yaml` template with at least the
+`NAMESPACE` parameter. This parameter must be the name of the OpenShift
+project where you want to deploy prometheus. This parameter is required
+to setup correctly the OpenShift authentication in Prometheus.
 
-### Deploy Grafana and Prometheus
+For instance, to deploy Prometheus in a project named "my-metrics", use:
 
-```
-oc process -f grafana-prometheus-storage.yaml -p PVC_SIZE=1Gi |oc create -f -
-oc process -f grafana-prometheus.yaml -p PROMETHEUS_ROUTE_HOSTNAME=prometheus.app.openshift.test -p ALERTS_ROUTE_HOSTNAME=alerts.app.openshift.test |oc create -f -
-oc process -f grafana-base.yaml -p GRAFANA_ROUTE_HOSTNAME=grafana.app.openshift.test |oc create -f -
+```sh
+oc process -f prometheus.yaml -p NAMESPACE=my-metrics |oc create -n my-metrics -f -
 ```
 
-### Deploy only Grafana with its vanilla configuration
+## Deploy Grafana
 
+To deploy grafana, process the `grafana.yaml` template with at least the
+`NAMESPACE` parameter. This parameter must be the name of the OpenShift
+project where you want to deploy Grafana. This parameter is required
+to setup correctly the OpenShift authentication in Grafana.
+
+For instance, to deploy Grafana in a project named "my-metrics", use:
+
+```sh
+oc process -f grafana.yaml -p NAMESPACE=my-metrics |oc create -n my-metrics -f -
 ```
-oc process -f grafana-nodatasource.yaml |oc create -f -
-oc process -f grafana-base.yaml |oc create -f -
+
+### Choosing the version to deploy
+
+To deploy the latest stable release of Grafana:
+
+```sh
+oc process -f grafana.yaml -p NAMESPACE=my-metrics -p GRAFANA_RELEASE=stable |oc create -n my-metrics -f -
 ```
 
-## Configuration
+To deploy the latest beta release of Grafana:
 
-Once deployed, connect to Grafana and add a datasource with the following configuration:
-- Name: `prometheus`
-- Type: `Prometheus`
-- URL: `http://prometheus:9090`
-- Access: `proxy`
+```sh
+oc process -f grafana.yaml -p NAMESPACE=my-metrics -p GRAFANA_RELEASE=beta |oc create -n my-metrics -f -
+```
 
+To deploy a custom version of Grafana:
+
+```sh
+oc process -f grafana.yaml -p NAMESPACE=my-metrics -p GRAFANA_RELEASE=custom -p GRAFANA_CUSTOM_VERSION=4.1.2 |oc create -n my-metrics -f -
+```
+
+### Misc. settings
+
+To customize the hostname of the Grafana route, use:
+
+```sh
+oc process -f grafana.yaml -p NAMESPACE=my-metrics -p GRAFANA_HOSTNAME=grafana.acme.corp |oc create -n my-metrics -f -
+```
+
+By default, a 1Gb volume is reserved for grafana, if you want to use a different size:
+
+```sh
+oc process -f grafana.yaml -p NAMESPACE=my-metrics -p GRAFANA_VOLUME_SIZE=10Gi |oc create -n my-metrics -f -
+```
