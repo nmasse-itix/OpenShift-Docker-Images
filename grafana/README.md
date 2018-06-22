@@ -1,4 +1,4 @@
-# Grafana and Prometheus for OpenShift 3.7
+# Grafana and Prometheus for OpenShift 3.9
 
 ## Description
 
