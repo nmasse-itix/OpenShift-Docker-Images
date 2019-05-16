@@ -1,28 +1,78 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: grafana-base
-message: See https://github.com/nmasse-itix/OpenShift-Docker-Images/tree/master/grafana for more details.
+  template: grafana
 metadata:
   annotations:
     description: |-
-      A grafana distribution for OpenShift.
-    openshift.io/display-name: Grafana (Base)
+      Grafana allows you to query, visualize, alert on and understand your metrics
+      no matter where they are stored. Create, explore, and share dashboards with
+      your team and foster a data driven culture.
+    openshift.io/display-name: Grafana
     tags: instant-app
-    template.openshift.io/documentation-url: https://github.com/nmasse-itix/OpenShift-Docker-Images/tree/master/grafana
+    template.openshift.io/documentation-url: http://docs.grafana.org/
     template.openshift.io/long-description: A grafana distribution for OpenShift.
-    template.openshift.io/provider-display-name: Nicolas Massé
-    template.openshift.io/support-url: https://github.com/nmasse-itix/OpenShift-Docker-Images/issues
-  name: grafana-base
+    template.openshift.io/provider-display-name: Grafana
+    template.openshift.io/support-url: https://grafana.com/enterprise
+  name: grafana
+parameters:
+- description: The Docker image to use for the OAuth Proxy.
+  displayName: OAuth Proxy image
+  name: PROXY_IMAGE
+  value: registry.access.redhat.com/openshift3/oauth-proxy:v3.11
+  required: true
+
+- description: The desired hostname of the route to the Grafana service.
+  displayName: Hostname of the Grafana Service
+  name: GRAFANA_HOSTNAME
+  required: false
+
+- description: The session secret for the proxy
+  name: SESSION_SECRET
+  generate: expression
+  from: "[a-zA-Z0-9]{43}"
+  required: true
+
+- description: The Grafana version to deploy
+  displayName: Grafana version
+  name: GRAFANA_CUSTOM_VERSION
+  value: 5.1.4
+  required: true
+
+- description: The Grafana release to deploy, either 'stable', 'beta', 'master', 'custom' or 'redhat'
+  displayName: Grafana release
+  name: GRAFANA_RELEASE
+  value: master
+  required: true
+
+- description: The namespace used to deploy this template
+  displayName: Kubernetes Namespace
+  name: NAMESPACE
+  required: true
+
+- description: Volume size for the Grafana DB
+  displayName: Volume Size
+  name: GRAFANA_VOLUME_SIZE
+  value: "1Gi"
+  required: true
+
 objects:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: grafana
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${GRAFANA_VOLUME_SIZE}
 
 - apiVersion: v1
   kind: Secret
   metadata:
     name: oauth-proxy
     namespace: "${NAMESPACE}"
-    labels:
-      template: grafana-base
   stringData:
     session_secret: "${SESSION_SECRET}="
 
@@ -31,8 +81,6 @@ objects:
   metadata:
     name: grafana
     namespace: ${NAMESPACE}
-    labels:
-      template: grafana-base
     annotations:
       serviceaccounts.openshift.io/oauth-redirectreference.proxy: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"grafana"}}'
   secrets:
@@ -42,13 +90,8 @@ objects:
   metadata:
     name: grafana-config
     namespace: ${NAMESPACE}
-    labels:
-      template: grafana-base
   data:
     grafana.ini: |-
-      [paths]
-      datasources = /etc/grafana-datasources/
-
       [server]
       http_addr = 127.0.0.1
 
@@ -67,67 +110,90 @@ objects:
       auto_assign_org = true
       auto_assign_org_role = Admin
 
-      [analytics]
-      reporting_enabled = false
-
       [log]
       mode = console
 
-      [dashboards.json]
-      enabled = true
-      path = /var/lib/grafana-dashboards
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: grafana-datasources
+    namespace: ${NAMESPACE}
+  data:
+    prometheus.yaml: |-
+      apiVersion: 1
+      datasources:
+      - name: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: false
+        version: 1
+        editable: true
+        options:
+          path: '/usr/share/dashboards'
+
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: grafana-dashboards
+    namespace: ${NAMESPACE}
+  data:
+    prometheus.yaml: |-
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 300
 
 - apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
       build: grafana
-      template: grafana-base
     namespace: ${NAMESPACE}
     name: grafana
-
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    name: grafana
-    labels:
-      build: grafana
-      template: grafana-base
-    namespace: ${NAMESPACE}
   spec:
-    successfulBuildsHistoryLimit: 1
-    failedBuildsHistoryLimit: 1
-    nodeSelector: null
-    output:
-      to:
-        kind: ImageStreamTag
-        name: grafana:latest
-        namespace: ${NAMESPACE}
-    postCommit: {}
-    resources: {}
-    runPolicy: Serial
-    source:
-      git:
-        uri: ${GIT_REPO}
-      type: Git
-      contextDir: grafana
-    strategy:
-      dockerStrategy:
+    dockerImageRepository: docker.io/grafana/grafana
+    tags:
+      - name: stable
         from:
-          kind: ImageStreamTag
-          name: ${RHEL_IMAGE_STREAM_TAG}
-          namespace: ${RHEL_IMAGE_STREAM_NAMESPACE}
-      type: Docker
-    triggers:
-    - type: ConfigChange
-    - type: ImageChange
+          kind: DockerImage
+          name: 'docker.io/grafana/grafana:5.1.4'
+        importPolicy:
+          scheduled: true
+      - name: beta
+        from:
+          kind: DockerImage
+          name: 'docker.io/grafana/grafana:5.2.0-beta3'
+        importPolicy:
+          scheduled: true
+      - name: master
+        from:
+          kind: DockerImage
+          name: 'docker.io/grafana/grafana:master'
+        importPolicy:
+          scheduled: true
+      - name: custom
+        from:
+          kind: DockerImage
+          name: 'docker.io/grafana/grafana:${GRAFANA_CUSTOM_VERSION}'
+        importPolicy:
+          scheduled: true
+      - name: redhat
+        from:
+          kind: DockerImage
+          name: 'registry.access.redhat.com/openshift3/grafana:v3.11'
+        importPolicy:
+          scheduled: true
 
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
       app: grafana
-      template: grafana-base
     name: grafana
     namespace: ${NAMESPACE}
   spec:
@@ -145,7 +211,6 @@ objects:
         labels:
           app: grafana
           deploymentconfig: grafana
-          template: grafana-base
       spec:
         containers:
         - image: " "
@@ -160,11 +225,13 @@ objects:
           volumeMounts:
           - mountPath: /etc/grafana/
             name: grafana-config
-          - mountPath: /etc/grafana-datasources
-            name: grafana-datasources
+          - mountPath: /var/log/grafana/
+            name: grafana-logs
           - mountPath: /var/lib/grafana/
             name: grafana-storage
-          - mountPath: /var/lib/grafana-dashboards
+          - mountPath: /etc/grafana/provisioning/datasources
+            name: grafana-datasources
+          - mountPath: /etc/grafana/provisioning/dashboards
             name: grafana-dashboards
         - image: ${PROXY_IMAGE}
           imagePullPolicy: IfNotPresent
@@ -207,6 +274,9 @@ objects:
           secret:
             secretName: grafana-tls
         - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana
+        - name: grafana-logs
           emptyDir: {}
         - name: grafana-config
           configMap:
@@ -227,14 +297,13 @@ objects:
         - grafana
         from:
           kind: ImageStreamTag
-          name: grafana:latest
+          name: grafana:${GRAFANA_RELEASE}
 
 - apiVersion: v1
   kind: Service
   metadata:
     labels:
       app: grafana
-      template: grafana-base
     name: grafana
     namespace: ${NAMESPACE}
     annotations:
@@ -256,11 +325,10 @@ objects:
   metadata:
     labels:
       app: grafana
-      template: grafana-base
     name: grafana
     namespace: ${NAMESPACE}
   spec:
-    host: ${GRAFANA_ROUTE_HOSTNAME}
+    host: ${GRAFANA_HOSTNAME}
     port:
       targetPort: oauth-proxy
     to:
@@ -270,40 +338,3 @@ objects:
     wildcardPolicy: None
     tls:
       termination: reencrypt
-
-##
-## Template Parameters
-##
-parameters:
-- description: The GIT repository to use.
-  displayName: GIT Repo URL
-  name: GIT_REPO
-  value: https://github.com/nmasse-itix/OpenShift-Docker-Images.git
-
-- description: The OpenShift Namespace where the RHEL ImageStream resides.
-  displayName: RHEL ImageStream Namespace
-  name: RHEL_IMAGE_STREAM_NAMESPACE
-  value: openshift
-
-- description: Name of the ImageStreamTag to be used for the RHEL image.
-  displayName: RHEL ImageStreamTag
-  name: RHEL_IMAGE_STREAM_TAG
-  value: rhel7:7.4
-
-- description: The Docker image to use for the OAuth Proxy.
-  displayName: OAuth Proxy image
-  name: PROXY_IMAGE
-  value: openshift3/oauth-proxy:v3.9
-
-- description: The desired hostname of the route to the Grafana service.
-  displayName: Hostname of the Grafana Service
-  name: GRAFANA_ROUTE_HOSTNAME
-
-- description: The session secret for the proxy
-  name: SESSION_SECRET
-  generate: expression
-  from: "[a-zA-Z0-9]{43}"
-
-- description: The namespace to instantiate this template under. Defaults to 'openshift-metrics'.
-  name: NAMESPACE
-  value: openshift-metrics
