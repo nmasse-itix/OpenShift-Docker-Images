@@ -124,6 +124,8 @@ objects:
           volumeMounts:
           - mountPath: /etc/minio/
             name: minio-config
+          - mountPath: /etc/minio/certs/CAs
+            name: minio-ca
           - mountPath: /var/lib/minio/
             name: minio-storage
         dnsPolicy: ClusterFirst
@@ -136,6 +138,8 @@ objects:
         - name: minio-config
           configMap:
             name: minio-config
+        - name: minio-ca
+          emptyDir: {}
     test: false
     triggers:
     - type: ConfigChange
