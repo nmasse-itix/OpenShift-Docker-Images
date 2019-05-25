@@ -475,7 +475,7 @@ parameters:
 - description: The Docker image to use for the OAuth Proxy.
   displayName: OAuth Proxy image
   name: PROXY_IMAGE
-  value: openshift3/oauth-proxy:v3.9
+  value: openshift3/oauth-proxy:v3.11
 
 - description: The session secret for the proxy
   name: SESSION_SECRET
