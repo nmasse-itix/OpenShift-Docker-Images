@@ -45,11 +45,10 @@ On each node that will run `rtorrent`, you will have to add an exception in the
 To add them permanently, use:
 
 ```sh
-cat <<EOF >> /etc/sysconfig/iptables
--A OS_FIREWALL_ALLOW -m state --state NEW -p udp --dport 6881 -j ACCEPT
--A OS_FIREWALL_ALLOW -m state --state NEW -p udp --match multiport --dports 6890:6899 -j ACCEPT
--A OS_FIREWALL_ALLOW -m state --state NEW -p tcp --match multiport --dports 6890:6899 -j ACCEPT
-EOF
+firewall-cmd --permanent --direct --add-rule ipv4 filter IN_public_allow 1 -m udp -p udp -m conntrack --ctstate NEW --dport 6881 -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 filter IN_public_allow 1 -m udp -p udp -m conntrack --ctstate NEW -m multiport --dports 6890:6899 -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 filter IN_public_allow 1 -m tcp -p tcp -m conntrack --ctstate NEW -m multiport --dports 6890:6899 -j ACCEPT
+firewall-cmd --reload
 ```
 
 ### Deploy rtorrent
